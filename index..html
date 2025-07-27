@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ベース指板コードトーン表示アプリβ版</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #001e43;
+            color: #ffffff;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .display-toggle {
+            display: flex;
+            gap: 5px;
+            padding: 4px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background-color: #333;
+        }
+
+        .toggle-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: transparent;
+            color: #ccc;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .toggle-btn.active {
+            background-color: #4a90e2;
+            color: white;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #cccccc;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .fretboard {
+            background-color: #deb887;
+            border: 3px solid #8b4513;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        .fretboard-inner {
+            min-width: 740px;
+            position: relative;
+        }
+        
+        .string {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .string-line {
+            height: 3px;
+            background-color: #808080;
+            display: flex;
+            align-items: center;
+            border-radius: 1px;
+            position: relative;
+        }
+        
+        .string-name {
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: #fff;
+            background-color: #333;
+            padding: 5px;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        
+        .fret {
+            width: 48px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0 2px;
+        }
+        
+        .fret-line {
+            position: absolute;
+            right: 0;
+            top: -20px;
+            bottom: -20px;
+            width: 2px;
+            background-color: #8B4513;
+        }
+
+        .fret-line.nut {
+            width: 4px;
+            background-color: #333;
+        }
+        
+        .note {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+        
+        .note.root {
+            background-color: #ff6b35;
+            color: white;
+            border-color: #ff4500;
+        }
+        
+        .note.chord-tone {
+            background-color: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+        
+        .note.empty {
+            background-color: transparent;
+            color: #666;
+            border-color: #444;
+            cursor: default;
+        }
+        
+        .note:hover:not(.empty) {
+            transform: scale(1.15);
+        }
+        
+        .fret-numbers {
+            display: flex;
+            padding-left: 50px;
+            margin-bottom: 10px;
+        }
+        
+        .fret-number {
+            width: 52px;
+            text-align: center;
+            font-size: 12px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+        
+        .legend-root {
+            background-color: #ff6b35;
+            border-color: #ff4500;
+        }
+        
+        .legend-chord-tone {
+            background-color: #4a90e2;
+            border-color: #357abd;
+        }
+        
+        .chord-info {
+            background-color: #2c2c2c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .chord-tones-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .chord-tones {
+            font-size: 16px;
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        #playChordButton {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #fff;
+        }
+        #playChordButton:hover {
+            background-color: #444;
+        }
+        
+        .chord-degrees {
+            font-size: 14px;
+            color: #4a90e2;
+            margin-top: 5px;
+        }
+        .chord-degrees-verbose {
+            font-size: 14px;
+            color: #7dcea0;
+            margin-top: 8px;
+        }
+
+        /* --- レスポンシブ対応 --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 20px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .chord-tones-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .notice {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .version-history, .notice-section {
+            margin-top: 20px;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+        
+        .version-history h3, .notice-section h3 {
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+        
+        .version-history ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .version-history li {
+            margin-bottom: 5px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ベース指板コードトーン表示アプリβ版</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="stringCount">弦の数</label>
+                <select id="stringCount">
+                    <option value="4">4弦</option>
+                    <option value="5">5弦</option>
+                    <option value="6">6弦</option>
+                    <option value="7">7弦</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="tuning">チューニング</label>
+                <select id="tuning"></select>
+            </div>
+            <div class="control-group">
+                <label for="rootNote">ルート音</label>
+                <select id="rootNote">
+                    <option value="C">C</option> <option value="C#">C#</option> <option value="D">D</option>
+                    <option value="D#">D#</option> <option value="E">E</option> <option value="F">F</option>
+                    <option value="F#">F#</option> <option value="G">G</option> <option value="G#">G#</option>
+                    <option value="A">A</option> <option value="A#">A#</option> <option value="B">B</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="chordType">コードトーン</label>
+                <select id="chordType">
+                    <option value="major">メジャー</option>
+                    <option value="minor">マイナー (m)</option>
+                    <option value="dominant7th">セブンス (7)</option>
+                    <option value="major7th">メジャーセブンス (maj7)</option>
+                    <option value="minor7th">マイナーセブンス (m7)</option>
+                    <option value="minor7thFlat5">マイナーセブンス♭5 (m7♭5)</option>
+                    <option value="diminished">ディミニッシュ (dim)</option>
+                    <option value="diminished7th">ディミニッシュセブンス (dim7)</option>
+                    <option value="augmented">オーグメント (aug)</option>
+                    <option value="minorMajor7th">マイナーメジャーセブンス (mM7)</option>
+                    <option value="major6th">メジャーシックス (6)</option>
+                    <option value="minor6th">マイナーシックス (m6)</option>
+                    <option value="sus4">サスフォー (sus4)</option>
+                </select>
+            </div>
+             <div class="control-group">
+                <label>表示切替</label>
+                <div class="display-toggle">
+                    <button id="toggleNoteName" class="toggle-btn active">音名</button>
+                    <button id="toggleDegree" class="toggle-btn">度数</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chord-info">
+            <div id="chordTitle">C メジャー</div>
+            <div class="chord-tones-container">
+                <div class="chord-tones" id="chordTones">C - E - G</div>
+                <button id="playChordButton">再生 ▶</button>
+            </div>
+            <div class="chord-degrees" id="chordDegrees">1度 - 長3度 - 5度</div>
+            <div class="chord-degrees-verbose" id="chordDegreesVerbose">1st - M3rd - 5th</div>
+        </div>
+        
+        <div class="fretboard">
+            <div class="fretboard-inner">
+                <div class="fret-numbers" id="fretNumbers"></div>
+                <div id="fretboard-content"></div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-root"></div>
+                <span>ルート音（トニック）</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-chord-tone"></div>
+                <span>コードトーン構成音</span>
+            </div>
+        </div>
+
+        <footer style="text-align: left;">
+            <div class="notice">
+                <h3>注意書き</h3>
+                <p>
+                    ※4弦～7弦ベース対応。<br>
+                    ※レギュラー、半音下げ、1音下げ、ドロップDチューニングに対応。<br>
+                    ※スマホでもPCでも見れますがスマホの縦向きは指板が見切れます。横向きでどうぞ。<br>
+                    ※フレットの音名をクリックすると音がでますがスマホだと低音が聞き取りずらいです。<br>
+                    ※β版（お試し期間）のため不具合あったらごめんなさい。
+                </p>
+            </div>
+            <div class="version-history">
+                <h3>改版履歴</h3>
+                <ul>
+                    <li>Ver. 0.1: 2025/07/27, β版の公開。</li>
+                </ul>
+            </div>
+            <br>
+            <p>ベース指板コードトーン表示アプリβ版 Ver. 0.1</p>
+            <p>&copy; 2025 とよきち</p>
+        </footer>
+    </div>
+
+    <script>
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        const tunings = {
+            4: {
+                'standard': { name: '4弦 標準 (E-A-D-G)', strings: [{ name: 'G', openNote: 'G', octave: 2 }, { name: 'D', openNote: 'D', octave: 2 }, { name: 'A', openNote: 'A', octave: 1 }, { name: 'E', openNote: 'E', octave: 1 }] },
+                'halfDown': { name: '4弦 半音下げ', strings: [{ name: 'F#', openNote: 'F#', octave: 2 }, { name: 'C#', openNote: 'C#', octave: 2 }, { name: 'G#', openNote: 'G#', octave: 1 }, { name: 'D#', openNote: 'D#', octave: 1 }] },
+                'wholeDown': { name: '4弦 全音下げ', strings: [{ name: 'F', openNote: 'F', octave: 2 }, { name: 'C', openNote: 'C', octave: 2 }, { name: 'G', openNote: 'G', octave: 1 }, { name: 'D', openNote: 'D', octave: 1 }] },
+                'dropD': { name: '4弦 ドロップD', strings: [{ name: 'G', openNote: 'G', octave: 2 }, { name: 'D', openNote: 'D', octave: 2 }, { name: 'A', openNote: 'A', octave: 1 }, { name: 'D', openNote: 'D', octave: 1 }] }
+            },
+            5: {
+                'standard': { name: '5弦 標準 (B-E-A-D-G)', strings: [{ name: 'G', openNote: 'G', octave: 2 }, { name: 'D', openNote: 'D', octave: 2 }, { name: 'A', openNote: 'A', octave: 1 }, { name: 'E', openNote: 'E', octave: 1 }, { name: 'B', openNote: 'B', octave: 0 }] },
+                'halfDown': { name: '5弦 半音下げ', strings: [{ name: 'F#', openNote: 'F#', octave: 2 }, { name: 'C#', openNote: 'C#', octave: 2 }, { name: 'G#', openNote: 'G#', octave: 1 }, { name: 'D#', openNote: 'D#', octave: 1 }, { name: 'A#', openNote: 'A#', octave: 0 }] },
+                'wholeDown': { name: '5弦 全音下げ', strings: [{ name: 'F', openNote: 'F', octave: 2 }, { name: 'C', openNote: 'C', octave: 2 }, { name: 'G', openNote: 'G', octave: 1 }, { name: 'D', openNote: 'D', octave: 1 }, { name: 'A', openNote: 'A', octave: 0 }] }
+            },
+            6: {
+                'standard': { name: '6弦 標準 (B-E-A-D-G-C)', strings: [{ name: 'C', openNote: 'C', octave: 3 }, { name: 'G', openNote: 'G', octave: 2 }, { name: 'D', openNote: 'D', octave: 2 }, { name: 'A', openNote: 'A', octave: 1 }, { name: 'E', openNote: 'E', octave: 1 }, { name: 'B', openNote: 'B', octave: 0 }] },
+                'halfDown': { name: '6弦 半音下げ', strings: [{ name: 'B', openNote: 'B', octave: 2 }, { name: 'F#', openNote: 'F#', octave: 2 }, { name: 'C#', openNote: 'C#', octave: 2 }, { name: 'G#', openNote: 'G#', octave: 1 }, { name: 'D#', openNote: 'D#', octave: 1 }, { name: 'A#', openNote: 'A#', octave: 0 }] },
+                'wholeDown': { name: '6弦 全音下げ', strings: [{ name: 'A#', openNote: 'A#', octave: 2 }, { name: 'F', openNote: 'F', octave: 2 }, { name: 'C', openNote: 'C', octave: 2 }, { name: 'G', openNote: 'G', octave: 1 }, { name: 'D', openNote: 'D', octave: 1 }, { name: 'A', openNote: 'A', octave: 0 }] }
+            },
+            7: {
+                'standard': { name: '7弦 標準 (B-E-A-D-G-C-F)', strings: [{ name: 'F', openNote: 'F', octave: 3 }, { name: 'C', openNote: 'C', octave: 3 }, { name: 'G', openNote: 'G', octave: 2 }, { name: 'D', openNote: 'D', octave: 2 }, { name: 'A', openNote: 'A', octave: 1 }, { name: 'E', openNote: 'E', octave: 1 }, { name: 'B', openNote: 'B', octave: 0 }] },
+                'halfDown': { name: '7弦 半音下げ', strings: [{ name: 'E', openNote: 'E', octave: 3 }, { name: 'B', openNote: 'B', octave: 2 }, { name: 'F#', openNote: 'F#', octave: 2 }, { name: 'C#', openNote: 'C#', octave: 2 }, { name: 'G#', openNote: 'G#', octave: 1 }, { name: 'D#', openNote: 'D#', octave: 1 }, { name: 'A#', openNote: 'A#', octave: 0 }] },
+                'wholeDown': { name: '7弦 全音下げ', strings: [{ name: 'D#', openNote: 'D#', octave: 3 }, { name: 'A#', openNote: 'A#', octave: 2 }, { name: 'F', openNote: 'F', octave: 2 }, { name: 'C', openNote: 'C', octave: 2 }, { name: 'G', openNote: 'G', octave: 1 }, { name: 'D', openNote: 'D', octave: 1 }, { name: 'A', openNote: 'A', octave: 0 }] }
+            }
+        };
+
+        const degreeNames = { 0: '1度', 1: '短2度', 2: '長2度', 3: '短3度', 4: '長3度', 5: '4度', 6: '減5度', 7: '5度', 8: '短6度', 9: '長6度', 10: '短7度', 11: '長7度' };
+        const degreeVerboseNames = { 0: '1st', 1: 'm2nd', 2: '2nd', 3: 'm3rd', 4: '3rd', 5: '4th', 6: 'b5th', 7: '5th', 8: 'm6th', 9: '6th', 10: 'm7th', 11: '7th' };
+        const degreeDisplay = { 0: '1', 1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: '4', 6: 'b5', 7: '5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7' };
+        
+        const chords = {
+            major: [0, 4, 7],
+            minor: [0, 3, 7],
+            dominant7th: [0, 4, 7, 10],
+            major7th: [0, 4, 7, 11],
+            minor7th: [0, 3, 7, 10],
+            minor7thFlat5: [0, 3, 6, 10],
+            diminished: [0, 3, 6],
+            diminished7th: [0, 3, 6, 9],
+            augmented: [0, 4, 8],
+            minorMajor7th: [0, 3, 7, 11],
+            major6th: [0, 4, 7, 9],
+            minor6th: [0, 3, 7, 9],
+            sus4: [0, 5, 7],
+        };
+        
+        const chordNames = {
+            major: 'メジャー',
+            minor: 'マイナー (m)',
+            dominant7th: 'セブンス (7)',
+            major7th: 'メジャーセブンス (maj7)',
+            minor7th: 'マイナーセブンス (m7)',
+            minor7thFlat5: 'マイナーセブンス♭5 (m7♭5)',
+            diminished: 'ディミニッシュ (dim)',
+            diminished7th: 'ディミニッシュセブンス (dim7)',
+            augmented: 'オーグメント (aug)',
+            minorMajor7th: 'マイナーメジャーセブンス (mM7)',
+            major6th: 'メジャーシックス (6)',
+            minor6th: 'マイナーシックス (m6)',
+            sus4: 'サスフォー (sus4)',
+        };
+
+        // --- DOM Elements ---
+        const stringCountEl = document.getElementById('stringCount');
+        const tuningEl = document.getElementById('tuning');
+        const rootNoteEl = document.getElementById('rootNote');
+        const chordTypeEl = document.getElementById('chordType');
+        const fretboardContent = document.getElementById('fretboard-content');
+        const fretNumbersEl = document.getElementById('fretNumbers');
+        const toggleNoteNameBtn = document.getElementById('toggleNoteName');
+        const toggleDegreeBtn = document.getElementById('toggleDegree');
+        const playChordButton = document.getElementById('playChordButton');
+
+        // --- Audio Context for Sound ---
+        let audioCtx; let isPlaying = false;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        document.body.addEventListener('click', initAudio, { once: true });
+        
+        // --- App State ---
+        let currentDisplayMode = 'noteName';
+
+        // --- Functions ---
+        const getNoteNumber = (note) => notes.indexOf(note);
+        const getNoteName = (number) => notes[number % 12];
+        const getNoteAtFret = (openNote, fret) => getNoteName(getNoteNumber(openNote) + fret);
+        const getChordTones = (root, chordType) => chords[chordType].map(interval => getNoteName(getNoteNumber(root) + interval));
+        
+        function getNoteFrequency(noteName, octave) {
+            const a4 = 440.0;
+            const noteIndex = getNoteNumber(noteName);
+            const a4Index = getNoteNumber('A');
+            const semitonesFromA4 = (octave - 4) * 12 + (noteIndex - a4Index);
+            return a4 * Math.pow(2, semitonesFromA4 / 12);
+        }
+
+        function playNote(frequency, startTime) {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(frequency, startTime);
+            
+            gainNode.gain.setValueAtTime(1, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + 1.0);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 1.0);
+        }
+
+        function playChordSequence() {
+            if (isPlaying || !audioCtx) return;
+            isPlaying = true;
+            playChordButton.textContent = '再生中...';
+
+            const rootNote = rootNoteEl.value;
+            const chordType = chordTypeEl.value;
+            const chordToneSet = new Set(getChordTones(rootNote, chordType));
+            
+            const notesToPlay = [];
+            const selectedStrings = tunings[stringCountEl.value][tuningEl.value].strings;
+
+            [...selectedStrings].reverse().forEach(stringInfo => {
+                for (let fret = 0; fret <= 12; fret++) {
+                    const noteAtFret = getNoteAtFret(stringInfo.openNote, fret);
+                    if (chordToneSet.has(noteAtFret)) {
+                        const octave = stringInfo.octave + Math.floor((getNoteNumber(stringInfo.openNote) + fret) / 12);
+                        const freq = getNoteFrequency(noteAtFret, octave);
+                        notesToPlay.push({ freq });
+                    }
+                }
+            });
+
+            const uniqueNotes = Array.from(new Map(notesToPlay.map(item => [item.freq, item])).values());
+            uniqueNotes.sort((a, b) => a.freq - b.freq);
+
+            let startTime = audioCtx.currentTime + 0.1;
+            uniqueNotes.forEach(note => {
+                playNote(note.freq, startTime);
+                startTime += 0.3;
+            });
+
+            setTimeout(() => {
+                isPlaying = false;
+                playChordButton.textContent = '再生 ▶';
+            }, uniqueNotes.length * 300 + 1000);
+        }
+        
+        function updateTuningOptions(savedTuning = null) {
+            const count = stringCountEl.value;
+            const availableTunings = tunings[count];
+            let currentTuning = tuningEl.value;
+            tuningEl.innerHTML = '';
+
+            for (const key in availableTunings) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = availableTunings[key].name;
+                tuningEl.appendChild(option);
+            }
+            
+            if (savedTuning && availableTunings[savedTuning]) {
+                tuningEl.value = savedTuning;
+            }
+            
+            drawFretboard();
+        }
+
+        function drawFretboard() {
+            const rootNote = rootNoteEl.value;
+            const chordType = chordTypeEl.value;
+            const chordToneSet = new Set(getChordTones(rootNote, chordType));
+            const rootNoteNumber = getNoteNumber(rootNote);
+            
+            const selectedStrings = tunings[stringCountEl.value][tuningEl.value].strings;
+            
+            fretNumbersEl.innerHTML = '';
+            for (let fret = 0; fret <= 12; fret++) {
+                const fretNumEl = document.createElement('div');
+                fretNumEl.className = 'fret-number';
+                fretNumEl.textContent = fret;
+                fretNumbersEl.appendChild(fretNumEl);
+            }
+            
+            fretboardContent.innerHTML = '';
+            
+            selectedStrings.forEach(stringInfo => {
+                const stringEl = document.createElement('div');
+                stringEl.className = 'string';
+                
+                const stringName = document.createElement('div');
+                stringName.className = 'string-name';
+                stringName.textContent = stringInfo.openNote;
+                stringEl.appendChild(stringName);
+                
+                const stringLine = document.createElement('div');
+                stringLine.className = 'string-line';
+                
+                for (let fret = 0; fret <= 12; fret++) {
+                    const fretEl = document.createElement('div');
+                    fretEl.className = 'fret';
+                    
+                    if (fret >= 0) {
+                        const fretLine = document.createElement('div');
+                        fretLine.className = 'fret-line';
+                        if (fret === 0) {
+                            fretLine.classList.add('nut');
+                        }
+                        fretEl.appendChild(fretLine);
+                    }
+                    
+                    const noteEl = document.createElement('div');
+                    noteEl.className = 'note';
+                    
+                    const noteAtFret = getNoteAtFret(stringInfo.openNote, fret);
+                    const noteNumberAtFret = getNoteNumber(noteAtFret);
+                    
+                    if (chordToneSet.has(noteAtFret)) {
+                        if (noteAtFret === rootNote) {
+                            noteEl.classList.add('root');
+                        } else {
+                            noteEl.classList.add('chord-tone');
+                        }
+
+                        if (currentDisplayMode === 'degree') {
+                            const interval = (noteNumberAtFret - rootNoteNumber + 12) % 12;
+                            noteEl.textContent = degreeDisplay[interval];
+                        } else {
+                            noteEl.textContent = noteAtFret;
+                        }
+
+                        noteEl.addEventListener('click', () => {
+                           const octave = stringInfo.octave + Math.floor((getNoteNumber(stringInfo.openNote) + fret) / 12);
+                           const freq = getNoteFrequency(noteAtFret, octave);
+                           playNote(freq, audioCtx.currentTime);
+                        });
+
+                    } else {
+                        noteEl.classList.add('empty');
+                    }
+                    
+                    fretEl.appendChild(noteEl);
+                    stringLine.appendChild(fretEl);
+                }
+                
+                stringEl.appendChild(stringLine);
+                fretboardContent.appendChild(stringEl);
+            });
+            
+            updateChordInfo(rootNote, chordType, getChordTones(rootNote, chordType));
+            saveState();
+        }
+        
+        function updateChordInfo(root, chordType, chordTonesArray) {
+            const chordTitle = document.getElementById('chordTitle');
+            const chordTonesEl = document.getElementById('chordTones');
+            const chordDegreesEl = document.getElementById('chordDegrees');
+            const chordDegreesVerboseEl = document.getElementById('chordDegreesVerbose');
+            
+            chordTitle.textContent = `${root} ${chordNames[chordType]}`;
+            chordTonesEl.textContent = chordTonesArray.join(' - ');
+            
+            const intervals = chords[chordType];
+            const degrees = intervals.map(interval => degreeNames[interval]);
+            const verboseDegrees = intervals.map(interval => degreeVerboseNames[interval]);
+
+            chordDegreesEl.textContent = degrees.join(' - ');
+            chordDegreesVerboseEl.textContent = verboseDegrees.join(' - ');
+        }
+
+        function setDisplayMode(mode) {
+            currentDisplayMode = mode;
+            toggleNoteNameBtn.classList.toggle('active', mode === 'noteName');
+            toggleDegreeBtn.classList.toggle('active', mode === 'degree');
+            drawFretboard();
+        }
+
+        function saveState() {
+            const state = {
+                stringCount: stringCountEl.value,
+                tuning: tuningEl.value,
+                rootNote: rootNoteEl.value,
+                chordType: chordTypeEl.value,
+                displayMode: currentDisplayMode
+            };
+            localStorage.setItem('bassChordAppState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const savedState = localStorage.getItem('bassChordAppState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                stringCountEl.value = state.stringCount || '4';
+                updateTuningOptions(state.tuning);
+                rootNoteEl.value = state.rootNote || 'C';
+                chordTypeEl.value = state.chordType || 'major';
+                setDisplayMode(state.displayMode || 'noteName');
+            } else {
+                updateTuningOptions();
+            }
+        }
+
+        // --- Event Listeners ---
+        stringCountEl.addEventListener('change', () => updateTuningOptions());
+        tuningEl.addEventListener('change', drawFretboard);
+        rootNoteEl.addEventListener('change', drawFretboard);
+        chordTypeEl.addEventListener('change', drawFretboard);
+        toggleNoteNameBtn.addEventListener('click', () => setDisplayMode('noteName'));
+        toggleDegreeBtn.addEventListener('click', () => setDisplayMode('degree'));
+        playChordButton.addEventListener('click', playChordSequence);
+        
+        // --- Initial Load ---
+        loadState();
+
+    </script>
+</body>
+</html>
