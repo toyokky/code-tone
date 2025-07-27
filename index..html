@@ -292,7 +292,7 @@
         }
 
         footer {
-            text-align: center;
+            text-align: left;
             margin-top: 40px;
             padding: 20px;
             color: #777;
@@ -304,7 +304,7 @@
             line-height: 1.6;
         }
         
-        .version-history, .notice-section {
+        .version-history h3, .notice h3, .related-links h3 {
             margin-top: 20px;
             border-top: 1px solid #444;
             padding-top: 20px;
@@ -315,13 +315,21 @@
             margin-bottom: 10px;
         }
         
-        .version-history ul {
+        .version-history ul, .related-links ul {
             list-style: none;
             padding: 0;
         }
         
-        .version-history li {
-            margin-bottom: 5px;
+        .version-history li, .related-links li {
+            margin-bottom: 8px;
+        }
+        
+        .related-links a { /* リンクのスタイルを追加 */
+            color: #8ab4f8;
+            text-decoration: none;
+        }
+        .related-links a:hover { /* リンクのホバー時スタイルを追加 */
+            text-decoration: underline;
         }
 
     </style>
@@ -419,6 +427,14 @@
                     ※フレットの音名をクリックすると音がでますがスマホだと低音が聞き取りずらいです。<br>
                     ※β版（お試し期間）のため不具合あったらごめんなさい。
                 </p>
+            </div>
+            <div class="related-links">
+                <h3>関連アプリ</h3>
+                <ul>
+                    <li><a href="https://toyokky.github.io/bass-scale/" target="_blank" rel="noopener noreferrer">ベース指板スケール表示アプリβ版</a></li>
+                    <li><a href="https://toyokky.github.io/bass-codetone/" target="_blank" rel="noopener noreferrer">ベース指板コードトーン表示アプリβ版</a></li>
+                    <li><a href="https://docs.google.com/spreadsheets/d/1Ow-75I8Q4dVDVwszbXEYktXe9SGISEnOAqGMPQAntl8/edit?usp=sharing" target="_blank" rel="noopener noreferrer">フレット指板 音階表 ※Googleスプレットシート</a></li>
+                </ul>
             </div>
             <div class="version-history">
                 <h3>改版履歴</h3>
